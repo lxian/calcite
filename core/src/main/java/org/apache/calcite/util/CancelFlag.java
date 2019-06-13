@@ -22,7 +22,6 @@ import org.apache.calcite.plan.RelOptPlanner;
 import com.google.common.base.Preconditions;
 
 import java.util.concurrent.atomic.AtomicBoolean;
-import java.util.function.Supplier;
 
 /**
  * CancelFlag is used to post and check cancellation requests.
@@ -36,12 +35,8 @@ public class CancelFlag {
    * Feel free to use the flag directly. */
   public final AtomicBoolean atomicBoolean;
 
-  private static final ThreadLocal<CancelFlag> contextCancelFlag = ThreadLocal.withInitial(new Supplier<CancelFlag>() {
-    @Override
-    public CancelFlag get() {
-      return new CancelFlag(new AtomicBoolean(false));
-    }
-  });
+  private static final ThreadLocal<CancelFlag> CONTEXT_CANCEL_FLAG =
+          ThreadLocal.withInitial(() -> new CancelFlag(new AtomicBoolean(false)));
 
   public CancelFlag(AtomicBoolean atomicBoolean) {
     this.atomicBoolean = Preconditions.checkNotNull(atomicBoolean);
@@ -50,7 +45,7 @@ public class CancelFlag {
   //~ Methods ----------------------------------------------------------------
 
   public static CancelFlag getContextCancelFlag() {
-      return contextCancelFlag.get();
+    return CONTEXT_CANCEL_FLAG.get();
   }
 
   /**
