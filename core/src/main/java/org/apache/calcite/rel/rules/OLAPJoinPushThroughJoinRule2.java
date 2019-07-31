@@ -138,8 +138,8 @@ public class OLAPJoinPushThroughJoinRule2 extends RelOptRule {
     //        }
 
     // right join cannot be pushed through inner
-    if (!(topJoin.getJoinType() == JoinRelType.RIGHT
-            && bottomJoin.getJoinType() == JoinRelType.INNER)) {
+    if (topJoin.getJoinType() == JoinRelType.RIGHT
+            && bottomJoin.getJoinType() == JoinRelType.INNER) {
       return;
     }
 
