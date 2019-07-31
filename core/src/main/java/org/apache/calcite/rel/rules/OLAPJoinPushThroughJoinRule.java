@@ -110,7 +110,7 @@ public class OLAPJoinPushThroughJoinRule extends RelOptRule {
     // right join cannot be pushed through inner
     if (!(topJoin.getJoinType() == JoinRelType.RIGHT
         && bottomJoin.getJoinType() == JoinRelType.INNER)) {
-        return;
+      return;
     }
 
     // Split the condition of topJoin into a conjunction. Each of the
