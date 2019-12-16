@@ -6690,6 +6690,46 @@ LogicalProject(COL1=[SUM(100) OVER (PARTITION BY $7 ORDER BY $5 RANGE BETWEEN UN
 ]]>
         </Resource>
     </TestCase>
+    <TestCase name="testProjectWindowTransposeRuleWithSort">
+        <Resource name="sql">
+            <![CDATA[select * from (
+  select
+  row_number() over() as rn, empno
+  from
+  (
+    select
+      empno, deptno
+    from
+      emp
+    order by
+      empno limit 100
+  ) as t
+  )
+  where rn between 1 and 100]]>
+        </Resource>
+        <Resource name="planAfter">
+            <![CDATA[
+EnumerableProject(RN=[$0], N_REGIONKEY=[$1])
+  EnumerableFilter(condition=[AND(>=($0, 1), <=($0, 100))])
+    EnumerableProject(RN=[$2], N_REGIONKEY=[$0])
+      EnumerableWindow(window#0=[window(partition {} order by [] rows between UNBOUNDED PRECEDING and CURRENT ROW aggs [ROW_NUMBER()])])
+        EnumerableLimit(fetch=[100])
+          EnumerableSort(sort0=[$0], dir0=[ASC])
+            EnumerableProject(N_REGIONKEY=[$0], N_NATIONKEY=[$1])
+              EnumerableTableScan(table=[[CATALOG, SALES, CUSTOMER]])
+]]>
+        </Resource>
+        <Resource name="planBefore">
+            <![CDATA[
+LogicalProject(RN=[$0], N_REGIONKEY=[$1])
+  LogicalFilter(condition=[AND(>=($0, 1), <=($0, 100))])
+    LogicalProject(RN=[ROW_NUMBER() OVER (ROWS BETWEEN UNBOUNDED PRECEDING AND CURRENT ROW)], N_REGIONKEY=[$0])
+      LogicalSort(sort0=[$0], dir0=[ASC], fetch=[100])
+        LogicalProject(N_REGIONKEY=[$0], N_NATIONKEY=[$1])
+          LogicalTableScan(table=[[CATALOG, SALES, CUSTOMER]])
+]]>
+        </Resource>
+    </TestCase>
     <TestCase name="testPushFilterWithRank">
         <Resource name="sql">
             <![CDATA[select e1.ename, r

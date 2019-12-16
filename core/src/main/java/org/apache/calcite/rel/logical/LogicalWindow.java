@@ -16,13 +16,18 @@
  */
 package org.apache.calcite.rel.logical;
 
+import com.google.common.collect.ImmutableList;
+
 import org.apache.calcite.linq4j.Ord;
 import org.apache.calcite.plan.RelOptCluster;
 import org.apache.calcite.plan.RelOptUtil;
 import org.apache.calcite.plan.RelTraitSet;
 import org.apache.calcite.rel.RelCollation;
+import org.apache.calcite.rel.RelCollationTraitDef;
 import org.apache.calcite.rel.RelNode;
 import org.apache.calcite.rel.core.Window;
+import org.apache.calcite.rel.metadata.RelMdCollation;
+import org.apache.calcite.rel.metadata.RelMetadataQuery;
 import org.apache.calcite.rel.type.RelDataType;
 import org.apache.calcite.rex.RexInputRef;
 import org.apache.calcite.rex.RexLiteral;
@@ -255,8 +260,14 @@ public final class LogicalWindow extends Window {
           }
         };
 
+    final RelMetadataQuery mq = cluster.getMetadataQuery();
+    final RelNode input = child;
+    final ImmutableList<Group> winGroups = ImmutableList.copyOf(groups);
+    RelTraitSet correctedTraitSet = cluster.traitSet()
+        .replaceIfs(RelCollationTraitDef.INSTANCE, () -> RelMdCollation.window(mq, input, winGroups));
+
     final LogicalWindow window =
-        LogicalWindow.create(traitSet, child, constants, intermediateRowType,
+        LogicalWindow.create(correctedTraitSet, child, constants, intermediateRowType,
             groups);
 
     // The order that the "over" calls occur in the groups and
