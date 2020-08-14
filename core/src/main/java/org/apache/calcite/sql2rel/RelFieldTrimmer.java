@@ -1039,35 +1039,38 @@ public class RelFieldTrimmer implements ReflectiveVisitor {
       final TableScan tableAccessRel,
       ImmutableBitSet fieldsUsed,
       Set<RelDataTypeField> extraFields) {
+    // simply do not directly trim table scan
     final int fieldCount = tableAccessRel.getRowType().getFieldCount();
-    if (fieldsUsed.equals(ImmutableBitSet.range(fieldCount))
-        && extraFields.isEmpty()) {
-      // if there is nothing to project or if we are projecting everything
-      // then no need to introduce another RelNode
-      return trimFields(
-          (RelNode) tableAccessRel, fieldsUsed, extraFields);
-    }
-    final RelNode newTableAccessRel =
-        tableAccessRel.project(fieldsUsed, extraFields, relBuilder);
-
-    // Some parts of the system can't handle rows with zero fields, so
-    // pretend that one field is used.
-    if (fieldsUsed.cardinality() == 0) {
-      RelNode input = newTableAccessRel;
-      if (input instanceof Project) {
-        // The table has implemented the project in the obvious way - by
-        // creating project with 0 fields. Strip it away, and create our own
-        // project with one field.
-        Project project = (Project) input;
-        if (project.getRowType().getFieldCount() == 0) {
-          input = project.getInput();
-        }
-      }
-      return dummyProject(fieldCount, input);
-    }
-
-    final Mapping mapping = createMapping(fieldsUsed, fieldCount);
-    return result(newTableAccessRel, mapping);
+    return result(tableAccessRel,
+            Mappings.createIdentity(fieldCount));
+//    if (fieldsUsed.equals(ImmutableBitSet.range(fieldCount))
+//        && extraFields.isEmpty()) {
+//      // if there is nothing to project or if we are projecting everything
+//      // then no need to introduce another RelNode
+//      return trimFields(
+//          (RelNode) tableAccessRel, fieldsUsed, extraFields);
+//    }
+//    final RelNode newTableAccessRel =
+//        tableAccessRel.project(fieldsUsed, extraFields, relBuilder);
+//
+//    // Some parts of the system can't handle rows with zero fields, so
+//    // pretend that one field is used.
+//    if (fieldsUsed.cardinality() == 0) {
+//      RelNode input = newTableAccessRel;
+//      if (input instanceof Project) {
+//        // The table has implemented the project in the obvious way - by
+//        // creating project with 0 fields. Strip it away, and create our own
+//        // project with one field.
+//        Project project = (Project) input;
+//        if (project.getRowType().getFieldCount() == 0) {
+//          input = project.getInput();
+//        }
+//      }
+//      return dummyProject(fieldCount, input);
+//    }
+//
+//    final Mapping mapping = createMapping(fieldsUsed, fieldCount);
+//    return result(newTableAccessRel, mapping);
   }
 
   //~ Inner Classes ----------------------------------------------------------
