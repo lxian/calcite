@@ -708,6 +708,12 @@ public class RelFieldTrimmer implements ReflectiveVisitor {
       fieldsUsed = ImmutableBitSet.of(rowType.getFieldCount() - 1);
     }
 
+    // if setOp.all = false, all fields should be preserved,
+    // otherwise the distinct result may be changed
+    if (!setOp.all) {
+      fieldsUsed = ImmutableBitSet.range(rowType.getFieldCount());
+    }
+
     // Compute the desired field mapping. Give the consumer the fields they
     // want, in the order that they appear in the bitset.
     final Mapping mapping = createMapping(fieldsUsed, fieldCount);
