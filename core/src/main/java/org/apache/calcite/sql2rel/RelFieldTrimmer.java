@@ -832,6 +832,15 @@ public class RelFieldTrimmer implements ReflectiveVisitor {
           Mappings.createIdentity(rowType.getFieldCount()));
     }
 
+    // if no field is required then simply do not trim the aggregate
+    // otherwise it will become something like Aggregate(group=[{}])
+    // and it will need special handling on model matching and
+    // cuboid query in KE
+    if (fieldsUsed.isEmpty()) {
+      return result(aggregate,
+              Mappings.createIdentity(rowType.getFieldCount()));
+    }
+
     // Which agg calls are used by our consumer?
     int j = groupCount + indicatorCount;
     int usedAggCallCount = 0;
